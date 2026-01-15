@@ -1,7 +1,10 @@
+// always eventually full
+// always eventually empty
+
 mtype = {status_query, status_query_ack, req_filling, req_filling_ack, 
          filling, filling_ack, empty_state, ready, filled, open, close};
 
-chan Vessel = [10] of { bit };      // Liquid flow (for demonstration)
+chan Vessel = [2] of { bit };      // Liquid flow (for demonstration)
 chan blue = [10] of {mtype};        // Controller communication
 chan red = [10] of {mtype};         // Status signals
 chan in_to_valve = [1] of {mtype};  // In-valve control
@@ -16,7 +19,7 @@ proctype InValve(chan outflow, ctrl_cmd) {
     :: ctrl_cmd?open ->
         in_valve_open = true;
         outflow!1;  // Liquid flow - shows valve readiness
-        //outflow!1;  // Continuous liquid during open
+       
         
     :: ctrl_cmd?close -> in_valve_open = false
     od
@@ -52,7 +55,6 @@ proctype InValveCtrl(chan ctrl_cmd, blue_line, red_line, flag_ch) {
 
         ctrl_cmd!close;
         flag_ch!true;       /* tell OutValveCtrl we finished filling */
-        flag_ch?true;       /* wait until OutValveCtrl finishes emptying */
     od
 }
 
@@ -80,7 +82,6 @@ proctype OutValveCtrl(chan ctrl_cmd, blue_line, red_line, flag_ch) {
             ctrl_cmd!open;
             out_valve_open = 1;
             printf("1 process finished\n");
-            flag_ch!true
         fi
     od
 }
