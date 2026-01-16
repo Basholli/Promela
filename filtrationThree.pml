@@ -14,9 +14,6 @@ chan flag_chan = [1] of { bool };   // Process sync
 bool in_valve_open = false;
 bool out_valve_open = false;
 
-
-bool filledvessel=false;
-
 proctype InValve(chan outflow, ctrl_cmd) {
     do
     :: ctrl_cmd?open ->
@@ -32,7 +29,6 @@ proctype OutValve(chan inflow, ctrl_cmd) {
     do
     :: ctrl_cmd?open ->
         out_valve_open = true;
-       filledvessel=false;   // liveness check 1
         inflow?1;   // Consume liquid
         
     :: ctrl_cmd?close -> out_valve_open = false
@@ -56,7 +52,6 @@ proctype InValveCtrl(chan ctrl_cmd, blue_line, red_line, flag_ch) {
 
         blue_line?filling_ack;
         red_line?filled;
-        filledvessel=true; // liveness check 2
 
         ctrl_cmd!close;
         flag_ch!true;       /* tell OutValveCtrl we finished filling */
@@ -109,6 +104,5 @@ init {
     }
 }
 
-ltl both { 
-    ([] (filledvessel -> <> !filledvessel)) && ([] (!filledvessel -> <> filledvessel))
-}
+
+//this code runs perfectly in ispin, does not have liveness property except for the never statement, filtrationFOur will try to have both the code and the ltl livesness prperrty

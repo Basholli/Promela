@@ -14,8 +14,7 @@ chan flag_chan = [1] of { bool };   // Process sync
 bool in_valve_open = false;
 bool out_valve_open = false;
 
-
-bool filledvessel=false;
+bool filledvessel=false;    //liveness property variable
 
 proctype InValve(chan outflow, ctrl_cmd) {
     do
@@ -32,7 +31,7 @@ proctype OutValve(chan inflow, ctrl_cmd) {
     do
     :: ctrl_cmd?open ->
         out_valve_open = true;
-       filledvessel=false;   // liveness check 1
+        filledvessel=false;   // liveness check 1
         inflow?1;   // Consume liquid
         
     :: ctrl_cmd?close -> out_valve_open = false
@@ -57,7 +56,6 @@ proctype InValveCtrl(chan ctrl_cmd, blue_line, red_line, flag_ch) {
         blue_line?filling_ack;
         red_line?filled;
         filledvessel=true; // liveness check 2
-
         ctrl_cmd!close;
         flag_ch!true;       /* tell OutValveCtrl we finished filling */
     od
@@ -92,12 +90,12 @@ proctype OutValveCtrl(chan ctrl_cmd, blue_line, red_line, flag_ch) {
 }
 
 
-never { 
-    do
-    :: (in_valve_open && out_valve_open) -> assert(false)
-    :: else
-    od
-}
+// never { 
+//     do
+//     :: (in_valve_open && out_valve_open) -> assert(false)
+//     :: else
+//     od
+// }
 
 init {
     atomic {
@@ -112,3 +110,5 @@ init {
 ltl both { 
     ([] (filledvessel -> <> !filledvessel)) && ([] (!filledvessel -> <> filledvessel))
 }
+
+//this is the final code, runs infinitely on ispin and liveness property is confirmed
